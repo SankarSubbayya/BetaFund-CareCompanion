@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from app.routers import seniors, checkins, alerts, webhooks, services, agents
+from app.routers import seniors, checkins, alerts, webhooks, services, agents, memories
 from app.services.scheduler import start_scheduler, stop_scheduler
 
 logging.basicConfig(
@@ -49,6 +49,7 @@ app.include_router(alerts.router)
 app.include_router(webhooks.router)
 app.include_router(services.router)
 app.include_router(agents.router)
+app.include_router(memories.router)
 
 # Static files
 app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR)), name="static")
