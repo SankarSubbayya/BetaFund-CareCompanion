@@ -10,6 +10,7 @@ dependencies = [
     "httpx",
     "pydantic-settings",
     "apscheduler>=3.10,<4",
+    "evermemos>=0.3.13",
 ]
 
 [project.optional-dependencies]

@@ -9,6 +9,9 @@ class Settings(BaseSettings):
     insforge_base_url: str = ""
     insforge_anon_key: str = ""
 
+    # EverMind
+    evermind_api_key: str = ""
+
     # Google Places API (optional)
     google_places_api_key: str = ""
 
