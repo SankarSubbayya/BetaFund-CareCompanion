@@ -1,0 +1,9 @@
+{
+  "project_id": "your_project_id_here",
+  "project_name": "YourProjectName",
+  "org_id": "your_org_id_here",
+  "appkey": "your_appkey_here",
+  "region": "us-west",
+  "api_key": "your_api_key_here",
+  "oss_host": "https://your_appkey_here.us-west.insforge.app"
+}
