@@ -1,5 +1,5 @@
 // InsForge configuration
-const INSFORGE_BASE = 'https://yr4q54s8.us-east.insforge.app';
+const INSFORGE_BASE = 'https://4b7tn66d.us-east.insforge.app';
 const INSFORGE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3OC0xMjM0LTU2NzgtOTBhYi1jZGVmMTIzNDU2NzgiLCJlbWFpbCI6ImFub25AaW5zZm9yZ2UuY29tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2Nzc3MTV9.9TRZTYQE4h_zfD9pJqjslK8ShivTpZ0IWmsgqbFfPYg';
 
 let wellnessChart = null;
