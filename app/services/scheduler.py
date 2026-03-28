@@ -62,6 +62,13 @@ def remove_senior(phone: str) -> None:
         scheduler.remove_job(job_id)
 
 
+def _run_monthly_reports() -> None:
+    """Generate monthly reports for all seniors."""
+    from app.agents.monthly_report import generate_all_reports
+    reports = generate_all_reports()
+    logger.info("Generated %d monthly reports", len(reports))
+
+
 def start_scheduler() -> None:
     """Start the scheduler and load all existing seniors."""
     db = get_db()
@@ -72,6 +79,19 @@ def start_scheduler() -> None:
             schedule_senior(senior)
         except Exception as e:
             logger.error("Failed to schedule senior: %s", e)
+
+    # Monthly report job — runs on the 1st of each month at 8:00 AM
+    if not scheduler.get_job("monthly_reports"):
+        scheduler.add_job(
+            _run_monthly_reports,
+            "cron",
+            day=1,
+            hour=8,
+            minute=0,
+            id="monthly_reports",
+            replace_existing=True,
+        )
+        logger.info("Scheduled monthly report generation for 1st of each month at 08:00")
 
     if not scheduler.running:
         scheduler.start()

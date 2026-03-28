@@ -11,6 +11,7 @@ from app.agents.scheduling import (
     get_appointments,
 )
 from app.agents.daily_checkin import run_checkin
+from app.agents.monthly_report import generate_monthly_report, generate_all_reports
 
 router = APIRouter(prefix="/api/agents", tags=["agents"])
 
@@ -58,6 +59,20 @@ async def change_checkin_time(phone: str, new_time: str, _user: dict = Depends(v
     return await update_checkin_schedule(phone, new_time)
 
 
+# ── Monthly Report Agent ──
+
+@router.get("/report/{phone}")
+async def get_monthly_report(phone: str, _user: dict = Depends(verify_token)):
+    """Generate a monthly wellness report for a senior."""
+    return generate_monthly_report(phone)
+
+
+@router.get("/reports")
+async def get_all_reports(_user: dict = Depends(verify_token)):
+    """Generate monthly reports for all seniors."""
+    return generate_all_reports()
+
+
 # ── Agent Status ──
 
 @router.get("/status")
@@ -66,6 +81,8 @@ async def agent_status(_user: dict = Depends(verify_token)):
     db = get_db()
     seniors = db.scan("seniors")
     notifications = db.scan("notifications")
+
+    reports = db.scan("monthly_reports")
 
     return {
         "agents": [
@@ -88,6 +105,13 @@ async def agent_status(_user: dict = Depends(verify_token)):
                 "status": "active",
                 "notifications_sent": len(notifications),
                 "endpoint": "/api/agents/schedule/*",
+            },
+            {
+                "name": "Monthly Report Agent",
+                "description": "Generates monthly wellness reports for families",
+                "status": "active",
+                "reports_generated": len(reports),
+                "endpoint": "/api/agents/report/{phone}",
             },
         ]
     }

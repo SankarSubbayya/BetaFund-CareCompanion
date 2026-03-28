@@ -118,11 +118,12 @@ class TestAgentsAPI:
         resp = client.get("/api/agents/status")
         assert resp.status_code == 200
         data = resp.json()
-        assert len(data["agents"]) == 3
+        assert len(data["agents"]) == 4
         names = [a["name"] for a in data["agents"]]
         assert "Onboarding Agent" in names
         assert "Daily Check-in Agent" in names
         assert "Scheduling & Notification Agent" in names
+        assert "Monthly Report Agent" in names
 
 
 class TestDashboard:
