@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareCompanion — Family Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+    <script src="https://cdn.auth0.com/js/auth0-spa-js/2.0/auth0-spa-js.production.js"></script>
+</head>
+<body>
+    <!-- Login Screen (shown when not authenticated) -->
+    <div id="login-screen" class="login-screen">
+        <div class="login-card">
+            <div class="login-logo">🏠</div>
+            <h1>CareCompanion</h1>
+            <p>Voice-first senior care for families</p>
+            <button class="btn btn-primary btn-login" onclick="login()">Log in with Auth0</button>
+            <button class="btn btn-outline btn-login" style="margin-top:0.5rem;" onclick="showApp()">Continue as Guest</button>
+            <p class="login-note">Secure authentication powered by Auth0</p>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar" style="display:none;">
+        <div class="sidebar-logo">
+            <span class="logo-icon">🏠</span>
+            <span class="logo-text">CareCompanion</span>
+        </div>
+        <div class="sidebar-user" id="sidebar-user"></div>
+        <div class="sidebar-label">MENU</div>
+        <a href="#" class="sidebar-item active" onclick="showPage('loved-ones')">
+            <span class="sidebar-icon">👥</span> Loved Ones
+        </a>
+        <a href="#" class="sidebar-item" onclick="showPage('checkins')">
+            <span class="sidebar-icon">📋</span> Check-ins
+        </a>
+        <a href="#" class="sidebar-item" onclick="showPage('medications')">
+            <span class="sidebar-icon">💊</span> Medications
+        </a>
+        <a href="#" class="sidebar-item" onclick="showPage('services')">
+            <span class="sidebar-icon">🏥</span> Services
+        </a>
+        <a href="#" class="sidebar-item" onclick="showPage('alerts')">
+            <span class="sidebar-icon">🔔</span> Alerts
+            <span id="alert-badge" class="nav-badge" style="display:none;">0</span>
+        </a>
+        <a href="#" class="sidebar-item" onclick="showPage('settings')">
+            <span class="sidebar-icon">⚙️</span> Settings
+        </a>
+        <div class="sidebar-footer">
+            <div class="sidebar-label">EMERGENCY</div>
+            <a href="tel:911" class="sidebar-item emergency">
+                <span class="sidebar-icon">🚨</span> Call 911
+            </a>
+            <a href="tel:211" class="sidebar-item">
+                <span class="sidebar-icon">📞</span> Call 211
+            </a>
+        </div>
+        <a href="#" class="sidebar-item" onclick="logout()" style="margin-top:0.5rem;">
+            <span class="sidebar-icon">🚪</span> Logout
+        </a>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content" id="main-content" style="display:none;">
+        <!-- Alerts Banner (always visible when alerts exist) -->
+        <div id="alerts-banner" class="alerts-banner" style="display:none;">
+            <div id="alerts-banner-content"></div>
+        </div>
+
+        <!-- Page: Loved Ones -->
+        <div id="page-loved-ones" class="page active">
+            <div class="page-header">
+                <h1>Loved Ones</h1>
+                <div class="page-actions">
+                    <div class="search-box">
+                        <input type="text" id="search-input" placeholder="Search by name or phone..." oninput="filterSeniors()">
+                    </div>
+                    <button class="btn btn-primary" onclick="showAddSeniorModal()">+ Add Senior</button>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-label">Total seniors</div>
+                    <div class="stat-value" id="stat-total">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Checked in today</div>
+                    <div class="stat-value stat-green" id="stat-checked">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Pending first call</div>
+                    <div class="stat-value stat-orange" id="stat-pending">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Avg. wellbeing score</div>
+                    <div class="stat-value" id="stat-avg">—/10</div>
+                </div>
+            </div>
+
+            <!-- Seniors Table -->
+            <div class="table-container">
+                <table class="data-table" id="seniors-table">
+                    <thead>
+                        <tr>
+                            <th>NAME</th>
+                            <th>STATUS</th>
+                            <th>SCORE</th>
+                            <th>MEDICATIONS</th>
+                            <th>ACTIONS</th>
+                        </tr>
+                    </thead>
+                    <tbody id="seniors-tbody">
+                        <tr><td colspan="5" class="empty-state">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Page: Check-ins -->
+        <div id="page-checkins" class="page">
+            <div class="page-header">
+                <h1>Check-in History</h1>
+            </div>
+            <div id="checkins-content">
+                <div class="wellness-chart-container">
+                    <canvas id="wellness-chart"></canvas>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr><th>DATE</th><th>SENIOR</th><th>MOOD</th><th>SCORE</th><th>MEDS</th><th>REQUESTS</th><th>SUMMARY</th></tr>
+                        </thead>
+                        <tbody id="checkins-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page: Medications -->
+        <div id="page-medications" class="page">
+            <div class="page-header">
+                <h1>Medications</h1>
+            </div>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr><th>SENIOR</th><th>MEDICATIONS</th><th>LAST TAKEN</th><th>COMPLIANCE</th></tr>
+                    </thead>
+                    <tbody id="meds-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Page: Services -->
+        <div id="page-services" class="page">
+            <div class="page-header">
+                <h1>Service Directory</h1>
+            </div>
+            <!-- Service Requests -->
+            <div id="service-requests-section" style="display:none; margin-bottom:2rem;">
+                <h2 style="margin-bottom:0.75rem;">Active Service Requests</h2>
+                <div id="service-requests-list" class="service-list"></div>
+            </div>
+            <!-- 211 Banner -->
+            <div class="info-banner">
+                <strong>📞 211 Bay Area</strong> — Free 24/7 referral to local health and human services. Dial <a href="tel:211">2-1-1</a> or text your ZIP to 898-211. Available in 150+ languages.
+            </div>
+            <div id="service-directory" class="service-directory"></div>
+        </div>
+
+        <!-- Page: Alerts -->
+        <div id="page-alerts" class="page">
+            <div class="page-header">
+                <h1>Alerts</h1>
+            </div>
+            <div id="alerts-full-list"></div>
+        </div>
+
+        <!-- Page: Settings -->
+        <div id="page-settings" class="page">
+            <div class="page-header">
+                <h1>Settings</h1>
+            </div>
+            <div class="settings-content">
+                <div class="setting-group">
+                    <h3>Webhook URL</h3>
+                    <p class="setting-desc">Bland AI sends call results to this URL</p>
+                    <code id="webhook-url"></code>
+                </div>
+                <div class="setting-group">
+                    <h3>Authentication</h3>
+                    <p class="setting-desc">Auth0 is currently <strong id="auth-status"></strong></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detail Panel (overlay) -->
+        <div id="detail-panel" class="detail-overlay" style="display:none;">
+            <div class="detail-panel">
+                <div class="detail-header">
+                    <h2 id="detail-name"></h2>
+                    <button class="btn-close" onclick="closeDetail()">✕</button>
+                </div>
+                <div class="detail-body">
+                    <div class="wellness-chart-container">
+                        <canvas id="detail-wellness-chart"></canvas>
+                    </div>
+                    <div id="detail-checkin-history"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Senior Modal -->
+    <div id="add-senior-modal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <h2>Add a Loved One</h2>
+            <form id="add-senior-form" onsubmit="addSenior(event)">
+                <label>Name
+                    <input type="text" id="senior-name" required placeholder="e.g. Margaret Johnson">
+                </label>
+                <label>Phone (E.164)
+                    <input type="tel" id="senior-phone" required placeholder="e.g. +14155551234">
+                </label>
+                <label>Medications (comma-separated)
+                    <input type="text" id="senior-meds" placeholder="e.g. Metformin, Lisinopril">
+                </label>
+                <label>Daily Check-in Time
+                    <input type="time" id="senior-schedule" value="09:00">
+                </label>
+                <label>Notes
+                    <textarea id="senior-notes" placeholder="Any additional notes..."></textarea>
+                </label>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Senior</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CareCompanion — Architecture</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f9fafb;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+        h1 { color: #2563eb; }
+        .diagram { width: 100%; max-width: 1100px; margin: 2rem 0; }
+        h2 { color: #374151; margin-top: 2rem; }
+    </style>
+</head>
+<body>
+    <h1>🏠 CareCompanion — System Architecture</h1>
+
+    <h2>3-Agent Architecture</h2>
+    <div class="diagram">
+        <pre class="mermaid">
+flowchart TB
+    subgraph Users["👥 Users"]
+        Senior["👴 Senior\n(Phone)"]
+        Family["👨‍👩‍👧 Family\n(Dashboard + Phone)"]
+    end
+
+    subgraph BlandAI["🎙️ Bland AI (Voice Platform)"]
+        OutboundCall["Outbound Calls"]
+        InboundCall["Inbound Calls"]
+        NotifyCall["Notification Calls"]
+    end
+
+    subgraph Agent1["🤖 Agent 1: Onboarding"]
+        OB_Voice["Voice registration"]
+        OB_Extract["Extract senior info\nfrom transcript"]
+        OB_Create["Create profile"]
+    end
+
+    subgraph Agent2["🤖 Agent 2: Daily Check-in"]
+        DC_Recall["Recall EverMind\nmemories"]
+        DC_Call["Initiate call\nwith context"]
+        DC_Analyze["Analyze transcript\n(mood, meds, services)"]
+        DC_Alert["Generate alerts"]
+        DC_Match["Match local services"]
+        DC_Store["Store new memory"]
+    end
+
+    subgraph Agent3["🤖 Agent 3: Scheduling & Notification"]
+        SN_Schedule["Manage daily\ncheck-in times"]
+        SN_Notify["Call family for\ncritical alerts"]
+        SN_Appts["Track appointments"]
+    end
+
+    subgraph EM["🧠 EverMind (Memory)"]
+        MemStore["Store Memory"]
+        MemRecall["Recall Memory"]
+        subgraph EMInfra["Infrastructure"]
+            Redis["Redis"]
+            MongoDB["MongoDB"]
+            ES["Elasticsearch"]
+            Milvus["Milvus"]
+        end
+    end
+
+    subgraph IF["🔧 InsForge (Backend)"]
+        Postgres["PostgreSQL"]
+        Auth["Authentication"]
+    end
+
+    subgraph Services["📒 Service Directory"]
+        SF["Verified SF Providers\n+ 211 Bay Area\n+ Google Places"]
+    end
+
+    %% Agent 1 flow
+    Family -->|"Register loved one"| OB_Voice
+    OB_Voice -->|"Voice call"| OutboundCall
+    OutboundCall -->|"Collect info"| Family
+    OB_Extract --> OB_Create
+
+    %% Agent 2 flow
+    SN_Schedule -->|"Daily cron"| DC_Recall
+    DC_Recall --> MemRecall
+    MemRecall -->|"Past conversations"| DC_Call
+    DC_Call --> OutboundCall
+    OutboundCall -->|"Call"| Senior
+    Senior -->|"Call in"| InboundCall
+    InboundCall --> DC_Analyze
+    OutboundCall --> DC_Analyze
+    DC_Analyze --> DC_Alert
+    DC_Alert --> DC_Match
+    DC_Match --> Services
+    DC_Store --> MemStore
+
+    %% Agent 3 flow
+    DC_Alert -->|"Critical/High"| SN_Notify
+    SN_Notify --> NotifyCall
+    NotifyCall -->|"📞 Alert call"| Family
+
+    %% Dashboard
+    Family -->|"View"| IF
+
+    style Users fill:#e0f2fe,stroke:#0284c7
+    style BlandAI fill:#fef3c7,stroke:#f59e0b
+    style Agent1 fill:#dbeafe,stroke:#2563eb
+    style Agent2 fill:#dbeafe,stroke:#2563eb
+    style Agent3 fill:#dbeafe,stroke:#2563eb
+    style EM fill:#f0fdf4,stroke:#16a34a
+    style IF fill:#f3e8ff,stroke:#9333ea
+    style Services fill:#fef3c7,stroke:#f59e0b
+    style EMInfra fill:#dcfce7,stroke:#16a34a
+        </pre>
+    </div>
+
+    <h2>3-Agent Flow</h2>
+    <div class="diagram">
+        <pre class="mermaid">
+sequenceDiagram
+    participant OA as 🤖 Onboarding Agent
+    participant DA as 🤖 Daily Check-in Agent
+    participant SA as 🤖 Scheduling Agent
+    participant EM as 🧠 EverMind
+    participant B as 🎙️ Bland AI
+    participant Sr as 👴 Senior
+    participant Fam as 👨‍👩‍👧 Family
+
+    Note over OA: Agent 1: Onboarding
+    Fam->>OA: Register loved one
+    OA->>B: Voice onboarding call
+    B->>Fam: Collect name, phone, meds, schedule
+    B-->>OA: Transcript
+    OA->>OA: Extract info + create profile
+
+    Note over DA: Agent 2: Daily Check-in
+    SA->>DA: Daily cron trigger
+    DA->>EM: Recall past conversations
+    EM-->>DA: "Hip hurting, missed meds last time"
+    DA->>B: Call with memory context
+    B->>Sr: 📞 "Hi Margaret, how is your hip?"
+    Sr-->>B: Voice conversation
+    B-->>DA: Transcript
+
+    DA->>DA: Analyze mood, meds, services
+    DA->>EM: Store new memory
+    Note over EM: "Margaret feeling better,<br/>took meds, needs groceries"
+
+    alt Service request detected
+        DA->>DA: Match local SF providers
+    end
+
+    Note over SA: Agent 3: Scheduling & Notification
+    alt Critical/High alert
+        DA->>SA: Alert detected!
+        SA->>B: Notification call
+        B->>Fam: 📞 "Margaret fell, needs attention"
+    end
+
+    Fam->>Fam: View dashboard
+    Note over Fam: Real-time alerts,<br/>wellness trends,<br/>service recommendations
+        </pre>
+    </div>
+
+    <h2>Data Model</h2>
+    <div class="diagram">
+        <pre class="mermaid">
+erDiagram
+    SENIOR {
+        string phone PK "E.164 format"
+        string name
+        list medications
+        list emergency_contacts
+        string checkin_schedule "HH:MM"
+        string notes
+    }
+
+    CHECKIN {
+        string key PK "phone:timestamp"
+        string senior_phone FK
+        string call_id
+        string timestamp
+        string transcript
+        string mood "happy|neutral|sad|concerning"
+        int wellness_score "1-10"
+        bool medication_taken
+        list concerns
+        list service_requests
+        string summary
+    }
+
+    ALERT {
+        string id PK "phone:timestamp:type"
+        string senior_phone FK
+        string senior_name
+        string timestamp
+        string alert_type "emergency|low_mood|missed_med|service_request"
+        string severity "critical|high|medium|low"
+        string message
+        bool acknowledged
+    }
+
+    MEMORY {
+        string message_id PK
+        string sender "senior phone"
+        string content "conversation summary"
+        string create_time
+        string memory_type "episodic_memory"
+    }
+
+    SENIOR ||--o{ CHECKIN : "has many"
+    SENIOR ||--o{ ALERT : "triggers"
+    CHECKIN ||--o{ ALERT : "generates"
+    SENIOR ||--o{ MEMORY : "remembered by EverMind"
+        </pre>
+    </div>
+
+    <h2>Service Request Flow</h2>
+    <div class="diagram">
+        <pre class="mermaid">
+flowchart LR
+    subgraph Detection["🧠 Transcript Analysis"]
+        T["Transcript"] --> K{"Keyword Match"}
+        K -->|"shower, bath"| SH["🚿 Shower Help"]
+        K -->|"hungry, food"| FD["🍽️ Food/Meals"]
+        K -->|"prescription, refill"| MED["💊 Medicine"]
+        K -->|"mail, package"| MAIL["📬 Mail Help"]
+        K -->|"ride, appointment"| TR["🚗 Transportation"]
+        K -->|"fell, chest pain"| EM["🚑 Emergency"]
+        K -->|"lonely, alone"| CP["💛 Companionship"]
+    end
+
+    subgraph Action["📋 Alert + Recommend"]
+        SH --> A1["Alert Family"]
+        FD --> A1
+        MED --> A1
+        MAIL --> A1
+        TR --> A1
+        EM --> A2["CRITICAL Alert + 911"]
+        CP --> A1
+        A1 --> REC["Recommend SF Providers"]
+        REC --> D["📊 Dashboard"]
+        A2 --> D
+    end
+
+    style Detection fill:#eff6ff,stroke:#2563eb
+    style Action fill:#fef3c7,stroke:#f59e0b
+        </pre>
+    </div>
+
+    <script>mermaid.initialize({ startOnLoad: true, theme: 'default' });</script>
+</body>
+</html>

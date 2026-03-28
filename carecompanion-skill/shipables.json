@@ -1,0 +1,84 @@
+{
+  "version": "1.0.0",
+  "repository": "https://github.com/SankarSubbayya/CareCompanion",
+  "homepage": "https://github.com/SankarSubbayya/CareCompanion",
+  "keywords": [
+    "senior-care",
+    "voice-ai",
+    "bland-ai",
+    "healthcare",
+    "elderly",
+    "check-in",
+    "wellness",
+    "medication",
+    "aerospike",
+    "auth0",
+    "fastapi",
+    "caregiver",
+    "family-dashboard",
+    "service-directory",
+    "alerts"
+  ],
+  "categories": [
+    "healthcare",
+    "voice",
+    "ai-agents"
+  ],
+  "author": {
+    "name": "Sankar Subbayya",
+    "github": "SankarSubbayya"
+  },
+  "config": {
+    "env": [
+      {
+        "name": "BLAND_AI_API_KEY",
+        "description": "Bland AI API key for voice calls",
+        "required": true,
+        "secret": true,
+        "default": ""
+      },
+      {
+        "name": "BASE_URL",
+        "description": "Public URL for Bland AI webhooks (ngrok URL)",
+        "required": true,
+        "secret": false,
+        "default": "http://localhost:8000"
+      },
+      {
+        "name": "AUTH0_DOMAIN",
+        "description": "Auth0 tenant domain",
+        "required": false,
+        "secret": false,
+        "default": ""
+      },
+      {
+        "name": "AUTH0_CLIENT_ID",
+        "description": "Auth0 SPA client ID",
+        "required": false,
+        "secret": false,
+        "default": ""
+      },
+      {
+        "name": "AEROSPIKE_HOST",
+        "description": "Aerospike server host",
+        "required": false,
+        "secret": false,
+        "default": "localhost"
+      },
+      {
+        "name": "AEROSPIKE_PORT",
+        "description": "Aerospike server port",
+        "required": false,
+        "secret": false,
+        "default": "3100"
+      },
+      {
+        "name": "USE_AEROSPIKE",
+        "description": "Use Aerospike database (false = in-memory fallback)",
+        "required": false,
+        "secret": false,
+        "default": "false"
+      }
+    ]
+  }
+}
