@@ -2,55 +2,39 @@
 
 export function AgenticAIFeatures() {
   const features = [
-    {
-      title: "Intelligent Scheduling",
-      description: "AI agents automatically match caregivers with patients based on skills, location, and availability",
-      icon: "📅",
-    },
-    {
-      title: "Real-Time Coordination",
-      description: "Agents handle schedule changes, cancellations, and emergencies instantly without human intervention",
-      icon: "⚡",
-    },
-    {
-      title: "Health Record Management",
-      description: "Secure AI-powered management of medical histories, medications, and care preferences",
-      icon: "📋",
-    },
-    {
-      title: "Smart Dispatch",
-      description: "Agents optimize caregiver routes and assignments to reduce response time and cost",
-      icon: "🚗",
-    },
-    {
-      title: "Continuous Learning",
-      description: "EverMind.ai stores care patterns and preferences to improve future recommendations",
-      icon: "🧠",
-    },
-    {
-      title: "24/7 Support",
-      description: "AI agents provide round-the-clock coordination while human caregivers provide actual care",
-      icon: "🌙",
-    },
+    { icon: "🔍", title: "Smart matching", description: "We pair patients with compatible caregivers based on needs, location, schedule, and personality." },
+    { icon: "📅", title: "Easy scheduling", description: "Book and manage appointments without phone calls. Everyone stays in sync automatically." },
+    { icon: "📝", title: "Shared care logs", description: "Every visit, note, and update is logged and shared with families so no one is ever left out." },
+    { icon: "✅", title: "Verified caregivers", description: "Every caregiver is background-checked, license verified, and reviewed before joining our network." },
+    { icon: "🌙", title: "Always on call", description: "Our support team is available 24/7 — because care needs don't follow a 9-to-5 schedule." },
+    { icon: "💳", title: "Seamless billing", description: "Invoicing and payments handled automatically — no awkward money conversations ever again." },
   ]
 
   return (
-    <section id="features" className="py-16 bg-white">
-      <div className="max-w-6xl mx-auto px-6">
-        <h2 className="text-4xl font-bold text-center mb-4">Agentic AI in Action</h2>
-        <p className="text-center text-gray-600 mb-12 text-lg">
-          Our AI agents handle coordination while humans provide care
-        </p>
+    <section id="features" className="bg-white py-[72px] px-12 border-t border-warm-border">
+      <div className="max-w-[1000px] mx-auto">
+        <div className="text-xs uppercase tracking-widest text-warm-orange mb-3">
+          How it works
+        </div>
+        <div className="text-4xl font-medium tracking-tight text-foreground mb-9">
+          Simple, warm, and built
+          <br />
+          for real people
+        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-[18px]">
           {features.map((feature, idx) => (
             <div
               key={idx}
-              className="p-8 border border-gray-200 rounded-lg hover:border-blue-500 hover:shadow-lg transition"
+              className="rounded-[18px] p-7 border border-warm-border bg-warm-bg"
             >
-              <div className="text-4xl mb-4">{feature.icon}</div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">{feature.title}</h3>
-              <p className="text-gray-600">{feature.description}</p>
+              <span className="text-2xl mb-3.5 block">{feature.icon}</span>
+              <h3 className="text-[17px] font-medium text-foreground mb-2">
+                {feature.title}
+              </h3>
+              <p className="text-sm text-warm-text leading-[1.55]">
+                {feature.description}
+              </p>
             </div>
           ))}
         </div>

@@ -6,19 +6,21 @@ export function CTA() {
   const router = useRouter()
 
   return (
-    <section id="cta" className="py-16 bg-gradient-to-r from-blue-600 to-blue-400">
-      <div className="max-w-4xl mx-auto px-6 text-center text-white">
-        <h2 className="text-4xl font-bold mb-4">Ready to Transform Care?</h2>
-        <p className="text-xl mb-8 opacity-90">
-          Join thousands of elderly individuals and caregivers on CareCompanion
-        </p>
-        <button
-          onClick={() => router.push("/signIn")}
-          className="bg-white text-blue-600 font-bold py-3 px-8 rounded-lg hover:bg-gray-100 transition text-lg"
-        >
-          Get Started Today
-        </button>
-      </div>
+    <section className="mx-12 mb-12 rounded-[28px] py-[60px] px-14 bg-gradient-to-br from-warm-blue to-warm-orange text-center">
+      <h2 className="text-[38px] font-medium text-white tracking-tight leading-[1.15] mb-3">
+        Ready to find care
+        <br />
+        that feels like family?
+      </h2>
+      <p className="text-[17px] text-white/85 mb-8">
+        Join thousands of patients and caregivers already on CareCompanion.
+      </p>
+      <button
+        onClick={() => router.push("/signIn")}
+        className="bg-white text-warm-orange text-base font-medium px-9 py-[15px] rounded-full hover:bg-[#fff3ee] transition cursor-pointer"
+      >
+        Get started free
+      </button>
     </section>
   )
 }
