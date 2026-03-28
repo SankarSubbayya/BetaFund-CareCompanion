@@ -499,12 +499,11 @@ function closeDetail() {
 
 async function triggerCall(phone) {
     try {
-        const result = await invokeFunction('checkins-api', {
+        const result = await invokeFunction('call-api', {
             method: 'POST',
-            query: `?phone=${encodeURIComponent(phone)}&action=trigger`,
-            body: { senior_phone: phone },
+            query: `?phone=${encodeURIComponent(phone)}`,
         });
-        alert(`Check-in call initiated!`);
+        alert(`Check-in call initiated for ${result.senior || phone}! Call ID: ${result.call_id || 'pending'}`);
     } catch (e) {
         alert('Failed to trigger call: ' + e.message);
     }
