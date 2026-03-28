@@ -18,10 +18,10 @@ export function Navigation() {
       </div>
 
       <div className="hidden md:flex gap-7">
-        <a href="#patients" className="text-[15px] text-warm-text-muted hover:text-warm-orange transition">
+        <Link href="/patients" className="text-[15px] text-warm-text-muted hover:text-warm-orange transition">
           For Patients
-        </a>
-        <Link href="/caregivers" className="text-[15px] text-warm-text-muted hover:text-warm-orange transition">
+        </Link>
+        <Link href="/caregiver" className="text-[15px] text-warm-text-muted hover:text-warm-orange transition">
           For Caregivers
         </Link>
         <a href="#families" className="text-[15px] text-warm-text-muted hover:text-warm-orange transition">
