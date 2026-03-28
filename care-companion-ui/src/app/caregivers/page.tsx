@@ -3,8 +3,7 @@
 import { useState, useEffect } from "react"
 import { Navigation } from "@/components/Navigation"
 
-const INSFORGE_BASE = "https://yr4q54s8.us-east.insforge.app"
-const INSFORGE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3OC0xMjM0LTU2NzgtOTBhYi1jZGVmMTIzNDU2NzgiLCJlbWFpbCI6ImFub25AaW5zZm9yZ2UuY29tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2Nzc3MTV9.9TRZTYQE4h_zfD9pJqjslK8ShivTpZ0IWmsgqbFfPYg"
+const INSFORGE_BASE = "https://4b7tn66d.us-east.insforge.app"
 
 interface Provider {
   id: string
@@ -57,26 +56,12 @@ export default function CaregiverDirectory() {
 
   async function fetchProviders() {
     try {
-      const resp = await fetch(`${INSFORGE_BASE}/rest/v1/providers?order=rating.desc`, {
-        headers: {
-          apikey: INSFORGE_ANON_KEY,
-          Authorization: `Bearer ${INSFORGE_ANON_KEY}`,
-        },
-      })
+      const resp = await fetch(`${INSFORGE_BASE}/functions/providers-api`)
       if (!resp.ok) throw new Error("Failed to fetch")
       const data = await resp.json()
-      setProviders(data)
-    } catch {
-      // Fallback: try edge function
-      try {
-        const resp = await fetch(`${INSFORGE_BASE}/functions/seniors-api?table=providers`, {
-          headers: { Authorization: `Bearer ${INSFORGE_ANON_KEY}` },
-        })
-        const data = await resp.json()
-        if (Array.isArray(data)) setProviders(data)
-      } catch {
-        console.error("Could not load providers")
-      }
+      if (Array.isArray(data)) setProviders(data)
+    } catch (e) {
+      console.error("Could not load providers:", e)
     } finally {
       setLoading(false)
     }
