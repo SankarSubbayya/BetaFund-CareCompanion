@@ -21,9 +21,9 @@ export function Navigation() {
         <a href="#patients" className="text-[15px] text-warm-text-muted hover:text-warm-orange transition">
           For Patients
         </a>
-        <a href="#caregivers" className="text-[15px] text-warm-text-muted hover:text-warm-orange transition">
+        <Link href="/caregivers" className="text-[15px] text-warm-text-muted hover:text-warm-orange transition">
           For Caregivers
-        </a>
+        </Link>
         <a href="#families" className="text-[15px] text-warm-text-muted hover:text-warm-orange transition">
           For Families
         </a>
