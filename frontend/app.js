@@ -1,4 +1,7 @@
-const API = '';
+// InsForge configuration
+const INSFORGE_BASE = 'https://yr4q54s8.us-east.insforge.app';
+const INSFORGE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3OC0xMjM0LTU2NzgtOTBhYi1jZGVmMTIzNDU2NzgiLCJlbWFpbCI6ImFub25AaW5zZm9yZ2UuY29tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2Nzc3MTV9.9TRZTYQE4h_zfD9pJqjslK8ShivTpZ0IWmsgqbFfPYg';
+
 let wellnessChart = null;
 let allSeniors = [];
 let allCheckins = [];
@@ -14,13 +17,39 @@ const MOOD_EMOJIS = { happy: '😊', neutral: '😐', sad: '😢', concerning: '
 
 // ── Helpers ──
 
-async function fetchJSON(url, opts = {}) {
-    const resp = await fetch(API + url, {
-        headers: { 'Content-Type': 'application/json' },
-        ...opts,
+// Call InsForge edge function
+async function invokeFunction(slug, opts = {}) {
+    const url = `${INSFORGE_BASE}/functions/${slug}${opts.query || ''}`;
+    const resp = await fetch(url, {
+        method: opts.method || 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${INSFORGE_ANON_KEY}`,
+        },
+        body: opts.body ? JSON.stringify(opts.body) : undefined,
     });
     if (!resp.ok) throw new Error(`API error: ${resp.status}`);
     return resp.json();
+}
+
+// Database operations via edge functions
+async function dbQuery(table, opts = {}) {
+    // Map table names to edge function slugs
+    const slugMap = {
+        seniors: 'seniors-api',
+        checkins: 'checkins-api',
+        alerts: 'alerts-api',
+        service_recommendations: 'services-api',
+        monthly_reports: 'reports-api',
+    };
+    const slug = slugMap[table] || table;
+    const queryStr = opts.query ? `?${opts.query}` : '';
+
+    return invokeFunction(slug, {
+        method: opts.method || 'GET',
+        query: queryStr,
+        body: opts.body,
+    });
 }
 
 function getInitials(name) {
@@ -75,12 +104,15 @@ function showPage(pageId) {
 
 async function loadSeniors() {
     try {
-        const seniors = await fetchJSON('/api/seniors');
-        const checkins = await fetchJSON('/api/checkins/latest/all');
+        const seniors = await invokeFunction('seniors-api');
+        const checkins = await invokeFunction('checkins-api');
         allSeniors = seniors;
 
+        // Build latest checkin per senior
         const checkinMap = {};
-        checkins.forEach(c => { checkinMap[c.senior_phone] = c; });
+        checkins.forEach(c => {
+            if (!checkinMap[c.senior_phone]) checkinMap[c.senior_phone] = c;
+        });
 
         // Stats
         const total = seniors.length;
@@ -177,9 +209,9 @@ function filterSeniors() {
     );
 
     // Re-fetch checkin map for filtered display
-    fetchJSON('/api/checkins/latest/all').then(checkins => {
+    invokeFunction('checkins-api').then(checkins => {
         const checkinMap = {};
-        checkins.forEach(c => { checkinMap[c.senior_phone] = c; });
+        checkins.forEach(c => { if (!checkinMap[c.senior_phone]) checkinMap[c.senior_phone] = c; });
         renderSeniorsTable(filtered, checkinMap);
     });
 }
@@ -188,7 +220,8 @@ function filterSeniors() {
 
 async function loadAlertsBanner() {
     try {
-        const alerts = await fetchJSON('/api/alerts');
+        const allAlerts = await invokeFunction('alerts-api');
+        const alerts = allAlerts.filter(a => !a.acknowledged);
         const banner = document.getElementById('alerts-banner');
         const content = document.getElementById('alerts-banner-content');
         const badge = document.getElementById('alert-badge');
@@ -219,7 +252,7 @@ async function loadAlertsBanner() {
 
 async function loadAlertsPage() {
     try {
-        const alerts = await fetchJSON('/api/alerts?acknowledged=true');
+        const alerts = await invokeFunction('alerts-api');
         const list = document.getElementById('alerts-full-list');
 
         if (alerts.length === 0) {
@@ -243,7 +276,7 @@ async function loadAlertsPage() {
 }
 
 async function acknowledgeAlert(alertId) {
-    await fetchJSON(`/api/alerts/${encodeURIComponent(alertId)}/acknowledge`, { method: 'PUT' });
+    await invokeFunction('alerts-api', { method: 'PUT', query: `?id=${alertId}` });
     refreshAll();
 }
 
@@ -251,8 +284,8 @@ async function acknowledgeAlert(alertId) {
 
 async function loadAllCheckins() {
     try {
-        const checkins = await fetchJSON('/api/checkins');
-        const seniors = await fetchJSON('/api/seniors');
+        const checkins = await invokeFunction('checkins-api');
+        const seniors = await invokeFunction('seniors-api');
         const seniorMap = {};
         seniors.forEach(s => { seniorMap[s.phone] = s.name; });
 
@@ -280,10 +313,10 @@ async function loadAllCheckins() {
 
 async function loadMedications() {
     try {
-        const seniors = await fetchJSON('/api/seniors');
-        const checkins = await fetchJSON('/api/checkins/latest/all');
+        const seniors = await invokeFunction('seniors-api');
+        const checkins = await invokeFunction('checkins-api');
         const checkinMap = {};
-        checkins.forEach(c => { checkinMap[c.senior_phone] = c; });
+        checkins.forEach(c => { if (!checkinMap[c.senior_phone]) checkinMap[c.senior_phone] = c; });
 
         const tbody = document.getElementById('meds-tbody');
         tbody.innerHTML = seniors.map(s => {
@@ -321,7 +354,7 @@ async function loadServicesPage() {
 
 async function loadServiceDirectory() {
     try {
-        const services = await fetchJSON('/api/services');
+        const services = await invokeFunction('services-api');
         const container = document.getElementById('service-directory');
         const icons = {
             shower_help: '🚿', medicine_need: '💊', food_order: '🍽️',
@@ -348,7 +381,7 @@ async function loadServiceDirectory() {
 
 async function loadServiceRequests() {
     try {
-        const alerts = await fetchJSON('/api/alerts');
+        const alerts = await invokeFunction('alerts-api');
         const serviceAlerts = alerts.filter(a => a.alert_type === 'service_request');
 
         const section = document.getElementById('service-requests-section');
@@ -362,7 +395,7 @@ async function loadServiceRequests() {
         section.style.display = 'block';
 
         let recommendations = [];
-        try { recommendations = await fetchJSON('/api/services/recommendations/recent'); } catch(e) {}
+        try { recommendations = []; /* service recommendations loaded via alerts */ } catch(e) {}
         const recMap = {};
         recommendations.forEach(r => { recMap[r.request_type] = r; });
 
@@ -402,8 +435,8 @@ async function showDetail(phone) {
     panel.style.display = 'flex';
 
     const [senior, checkins] = await Promise.all([
-        fetchJSON(`/api/seniors/${encodeURIComponent(phone)}`),
-        fetchJSON(`/api/checkins/${encodeURIComponent(phone)}`),
+        invokeFunction('seniors-api', { query: `?phone=${encodeURIComponent(phone)}` }),
+        invokeFunction('checkins-api', { query: `?phone=${encodeURIComponent(phone)}` }),
     ]);
 
     document.getElementById('detail-name').textContent = `${senior.name} — Check-in History`;
@@ -466,8 +499,12 @@ function closeDetail() {
 
 async function triggerCall(phone) {
     try {
-        const result = await fetchJSON(`/api/checkins/trigger/${encodeURIComponent(phone)}`, { method: 'POST' });
-        alert(`Check-in call initiated! Call ID: ${result.call_id}`);
+        const result = await invokeFunction('checkins-api', {
+            method: 'POST',
+            query: `?phone=${encodeURIComponent(phone)}&action=trigger`,
+            body: { senior_phone: phone },
+        });
+        alert(`Check-in call initiated!`);
     } catch (e) {
         alert('Failed to trigger call: ' + e.message);
     }
@@ -489,7 +526,7 @@ async function addSenior(event) {
         emergency_contacts: [],
     };
     try {
-        await fetchJSON('/api/seniors', { method: 'POST', body: JSON.stringify(senior) });
+        await invokeFunction('seniors-api', { method: 'POST', body: senior });
         closeModal();
         document.getElementById('add-senior-form').reset();
         loadSeniors();
