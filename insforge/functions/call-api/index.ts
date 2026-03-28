@@ -26,7 +26,7 @@ function buildCheckinPrompt(senior: any, doctors: any[]): string {
     for (const doc of doctors) {
       const spec = doc.specialty || 'General';
       if (!bySpecialty[spec]) bySpecialty[spec] = [];
-      if (bySpecialty[spec].length < 5) {
+      if (bySpecialty[spec].length < 3) {
         bySpecialty[spec].push(doc);
       }
     }
@@ -135,7 +135,7 @@ export default async function (req: Request): Promise<Response> {
     .from('providers')
     .select()
     .order('rating', { ascending: false })
-    .limit(30);
+    .limit(10);
 
   // Build prompt with real doctor data
   const prompt = buildCheckinPrompt(senior, doctors || []);
