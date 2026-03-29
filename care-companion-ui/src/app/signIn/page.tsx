@@ -54,12 +54,12 @@ export default function SignInPage() {
         <div className="space-y-3 mb-8">
           <p className="text-sm font-semibold text-gray-700">I am a...</p>
           <div className="grid grid-cols-2 gap-3">
-            <button className="bg-blue-50 border border-blue-200 text-blue-700 font-semibold py-2 rounded hover:bg-blue-100 transition">
+            <Link href="/patients" className="bg-blue-50 border border-blue-200 text-blue-700 font-semibold py-2 rounded hover:bg-blue-100 transition text-center">
               Patient
-            </button>
-            <button className="bg-teal-50 border border-teal-200 text-teal-700 font-semibold py-2 rounded hover:bg-teal-100 transition">
+            </Link>
+            <Link href="/caregiver" className="bg-teal-50 border border-teal-200 text-teal-700 font-semibold py-2 rounded hover:bg-teal-100 transition text-center">
               Caregiver
-            </button>
+            </Link>
           </div>
         </div>
 
@@ -78,7 +78,7 @@ export default function SignInPage() {
 
       {/* Back to Home */}
       <div className="mt-8">
-        <Link href="/landing" className="text-blue-600 hover:text-blue-700 font-semibold">
+        <Link href="/" className="text-blue-600 hover:text-blue-700 font-semibold">
           ← Back to Home
         </Link>
       </div>
